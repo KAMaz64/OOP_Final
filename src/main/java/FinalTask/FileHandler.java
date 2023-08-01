@@ -34,12 +34,28 @@ public class FileHandler implements Model {
     public List<Note> getNotesForWeek(String weekDay) {
         List<Note> result = new ArrayList<>();
         for (Note note : notes) {
-            // Assuming that the weekDay parameter is in lowercase like 'понедельник'
-            if (note.getDate().toLowerCase().contains(weekDay)) {
+            // Преобразуем день недели в нижний регистр перед сравнением
+            if (note.getWeekDay().toLowerCase().contains(weekDay.toLowerCase())) {
                 result.add(note);
             }
         }
         return result;
+    }
+
+    // Метод для получения дня недели на основе даты
+    private String getWeekDayFromDate(String date) {
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+            Date dateObj = format.parse(date);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(dateObj);
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            String[] weekDays = {"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"};
+            return weekDays[dayOfWeek - 1];
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     @Override
@@ -88,7 +104,8 @@ public class FileHandler implements Model {
     public void saveToFile(String filename) {
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
             for (Note note : notes) {
-                writer.write(note.getDate() + " " + note.getTime() + " - " + note.getContent());
+                // Добавляем день недели в формате (дд.мм.гггг день_недели)
+                writer.write(note.getDate() + " " + getWeekDayFromDate(note.getDate()) + " " + note.getTime() + " - " + note.getContent());
                 writer.newLine();
             }
             System.out.println("Данные успешно сохранены в файл.");
